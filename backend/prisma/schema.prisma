@@ -1,0 +1,284 @@
+// backend/prisma/schema.prisma - Enhanced version for Stationery Store
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?   @db.Text
+  products    Product[]
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("categories")
+}
+
+model Product {
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String?    @db.Text
+  price       Float
+  stock       Int        @default(0)
+  barcode     String?    @unique
+  image       String?
+  categoryId  Int?       @map("category_id")
+  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  saleItems   SaleItem[]
+  
+  // Enhanced fields for stationery store
+  isFavorite  Boolean    @default(false) @map("is_favorite")
+  favoriteOrder Int?     @map("favorite_order") // Order in favorites list (1-6)
+  minStock    Int        @default(10) @map("min_stock") // Minimum stock for this product
+  supplier    String?    // Supplier information
+  brand       String?    // Brand name (Pilot, Faber Castell, etc.)
+  unit        String     @default("pcs") // Unit (pcs, box, pack, etc.)
+  weight      Float?     // Weight in grams
+  dimensions  String?    // Dimensions (LxWxH)
+  
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("products")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(kasir)
+  sales     Sale[]
+  
+  // Enhanced user fields
+  phone     String?
+  address   String?  @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
+  lastLogin DateTime? @map("last_login")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Member {
+  id          Int      @id @default(autoincrement())
+  memberId    String   @unique @map("member_id") // Member ID shown to customer
+  name        String
+  email       String?
+  phone       String?
+  address     String?  @db.Text
+  birthDate   DateTime? @map("birth_date")
+  joinDate    DateTime @default(now()) @map("join_date")
+  
+  // Member benefits
+  discountRate Float   @default(0.05) @map("discount_rate") // 5% default
+  totalPurchase Float  @default(0) @map("total_purchase") // Total lifetime purchase
+  visitCount   Int     @default(0) @map("visit_count")
+  lastVisit    DateTime? @map("last_visit")
+  
+  // Status
+  isActive    Boolean  @default(true) @map("is_active")
+  
+  // Relations
+  sales       Sale[]
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("members")
+}
+
+model Sale {
+  id            Int         @id @default(autoincrement())
+  saleNumber    String      @unique @map("sale_number") // Auto-generated sale number
+  subtotal      Float       @default(0)
+  tax           Float       @default(0)
+  total         Float
+  
+  // Enhanced discount fields
+  memberDiscount Float      @default(0) @map("member_discount")
+  transactionDiscount Float @default(0) @map("transaction_discount")
+  totalDiscount Float       @default(0) @map("total_discount")
+  
+  // Payment fields
+  cashAmount    Float?      @map("cash_amount")
+  change        Float?
+  paymentMethod PaymentMethod @default(cash) @map("payment_method")
+  
+  // Member relation
+  memberId      Int?        @map("member_id")
+  member        Member?     @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  
+  // User relation
+  userId        Int?        @map("user_id")
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Items
+  items         SaleItem[]
+  
+  // Additional fields
+  notes         String?     @db.Text
+  receiptPrinted Boolean    @default(false) @map("receipt_printed")
+  
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        Int      @id @default(autoincrement())
+  saleId    Int      @map("sale_id")
+  productId Int      @map("product_id")
+  quantity  Int
+  price     Float    // Price at time of sale
+  subtotal  Float    // quantity * price
+  discount  Float    @default(0) // Item-specific discount
+  
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("sale_items")
+}
+
+model Settings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String @db.Text
+  type  SettingType @default(STRING)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model StockMovement {
+  id          Int      @id @default(autoincrement())
+  productId   Int      @map("product_id")
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  type        StockMovementType
+  quantity    Int      // Positive for IN, negative for OUT
+  previousStock Int    @map("previous_stock")
+  newStock    Int      @map("new_stock")
+  
+  // Reference to related transaction
+  saleId      Int?     @map("sale_id")
+  reference   String?  // Purchase order, adjustment, etc.
+  notes       String?  @db.Text
+  
+  // User who made the movement
+  userId      Int?     @map("user_id")
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("stock_movements")
+}
+
+model SupplierInvoice {
+  id            Int      @id @default(autoincrement())
+  invoiceNumber String   @unique @map("invoice_number")
+  supplier      String
+  totalAmount   Float    @map("total_amount")
+  paidAmount    Float    @default(0) @map("paid_amount")
+  status        InvoiceStatus @default(PENDING)
+  
+  // Dates
+  invoiceDate   DateTime @map("invoice_date")
+  dueDate       DateTime? @map("due_date")
+  paidDate      DateTime? @map("paid_date")
+  
+  // Items
+  items         SupplierInvoiceItem[]
+  
+  // User who created the invoice
+  userId        Int?     @map("user_id")
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  notes         String?  @db.Text
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier_invoices")
+}
+
+model SupplierInvoiceItem {
+  id        Int      @id @default(autoincrement())
+  invoiceId Int      @map("invoice_id")
+  invoice   SupplierInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  productId Int?     @map("product_id")
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  
+  // In case product doesn't exist yet
+  productName String? @map("product_name")
+  
+  quantity  Int
+  unitPrice Float    @map("unit_price")
+  subtotal  Float
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("supplier_invoice_items")
+}
+
+// Enums
+enum Role {
+  admin
+  kasir
+  gudang
+}
+
+enum PaymentMethod {
+  cash
+  card
+  digital
+  transfer
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+enum StockMovementType {
+  IN        // Stock masuk (pembelian, return, adjustment+)
+  OUT       // Stock keluar (penjualan, rusak, adjustment-)
+  TRANSFER  // Transfer antar lokasi
+  ADJUSTMENT // Penyesuaian stok
+}
+
+enum InvoiceStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// Add missing relations
+model Product {
+  // ... existing fields ...
+  stockMovements SupplierInvoiceItem[]
+}
+
+model User {
+  // ... existing fields ...
+  stockMovements StockMovement[]
+  supplierInvoices SupplierInvoice[]
+}
