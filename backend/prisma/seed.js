@@ -1,127 +1,358 @@
-// backend/prisma/seed.js - Enhanced seed for Stationery Store
+// backend/prisma/seed.js - Database seeding with comprehensive data
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Starting seed for Stationery Store POS...");
+  console.log("🌱 Starting database seeding...");
 
   try {
     // Clear existing data
-    console.log("🧹 Clearing existing data...");
-    await prisma.supplierInvoiceItem.deleteMany();
-    await prisma.supplierInvoice.deleteMany();
+    console.log("🧹 Cleaning existing data...");
     await prisma.stockMovement.deleteMany();
     await prisma.saleItem.deleteMany();
     await prisma.sale.deleteMany();
-    await prisma.member.deleteMany();
     await prisma.product.deleteMany();
     await prisma.category.deleteMany();
-    await prisma.settings.deleteMany();
+    await prisma.member.deleteMany();
     await prisma.user.deleteMany();
+    await prisma.settings.deleteMany();
 
-    console.log("✅ Data cleared successfully");
+    // Create Users
+    console.log("👥 Creating users...");
+    const hashedPassword = await bcrypt.hash("admin123", 10);
+    const kasirPassword = await bcrypt.hash("kasir123", 10);
+    const gudangPassword = await bcrypt.hash("gudang123", 10);
 
-    // Create categories for stationery store
-    console.log("📂 Creating stationery categories...");
+    const adminUser = await prisma.user.create({
+      data: {
+        name: "Administrator",
+        email: "admin@kasir.com",
+        password: hashedPassword,
+        role: "admin",
+        isActive: true,
+      },
+    });
+
+    const kasirUser = await prisma.user.create({
+      data: {
+        name: "Kasir 1",
+        email: "kasir@kasir.com",
+        password: kasirPassword,
+        role: "kasir",
+        isActive: true,
+      },
+    });
+
+    const gudangUser = await prisma.user.create({
+      data: {
+        name: "Staff Gudang",
+        email: "gudang@kasir.com",
+        password: gudangPassword,
+        role: "gudang",
+        isActive: true,
+      },
+    });
+
+    // Create Categories
+    console.log("📁 Creating categories...");
     const categories = await Promise.all([
       prisma.category.create({
         data: {
-          name: "Pulpen & Marker",
-          description:
-            "Pulpen, ballpoint, gel pen, marker, dan alat tulis sejenis",
-        },
-      }),
-      prisma.category.create({
-        data: {
-          name: "Pensil & Pensil Warna",
-          description: "Pensil grafit, pensil warna, pensil mekanik",
+          name: "Pulpen & Pensil",
+          description: "Alat tulis untuk menulis dan menggambar",
         },
       }),
       prisma.category.create({
         data: {
           name: "Buku & Kertas",
-          description: "Buku tulis, kertas HVS, kertas gambar, amplop",
+          description: "Buku tulis, kertas, dan media tulis",
+        },
+      }),
+      prisma.category.create({
+        data: {
+          name: "Alat Gambar",
+          description: "Alat untuk menggambar dan melukis",
         },
       }),
       prisma.category.create({
         data: {
           name: "Perlengkapan Kantor",
-          description:
-            "Gunting, stepler, paper clip, penggaris, dan alat kantor",
+          description: "Supplies untuk kebutuhan kantor",
         },
       }),
       prisma.category.create({
         data: {
-          name: "Alat Gambar & Lukis",
-          description: "Crayon, cat air, kuas, canvas, alat gambar teknik",
+          name: "Penggaris & Geometri",
+          description: "Alat ukur dan geometri",
         },
       }),
       prisma.category.create({
         data: {
-          name: "Lem & Perekat",
-          description: "Lem cair, lem stick, double tape, isolasi",
+          name: "Tas & Tempat Pensil",
+          description: "Tas sekolah dan tempat alat tulis",
         },
       }),
       prisma.category.create({
         data: {
-          name: "Penghapus & Korektor",
-          description:
-            "Penghapus karet, penghapus pensil, tip-ex, correction tape",
+          name: "Stationery Lainnya",
+          description: "Alat tulis dan kantor lainnya",
         },
       }),
     ]);
 
-    console.log(`✅ Created ${categories.length} stationery categories`);
-
-    // Create users with different roles
-    console.log("👥 Creating users...");
-    const hashedAdminPassword = await bcrypt.hash("admin123", 10);
-    const hashedKasirPassword = await bcrypt.hash("kasir123", 10);
-    const hashedGudangPassword = await bcrypt.hash("gudang123", 10);
-
-    const users = await Promise.all([
-      prisma.user.create({
+    // Create Products
+    console.log("📦 Creating products...");
+    const products = await Promise.all([
+      // Pulpen & Pensil
+      prisma.product.create({
         data: {
-          name: "Administrator",
-          email: "admin@kasir.com",
-          password: hashedAdminPassword,
-          role: "admin",
-          phone: "0291-123456",
-          address: "Jl. Admin No. 1, Kudus",
-          isActive: true,
+          name: "Pulpen Pilot G2 0.7mm",
+          description: "Pulpen gel premium dengan tinta halus",
+          barcode: "PEN001",
+          price: 5500,
+          stock: 150,
+          categoryId: categories[0].id,
         },
       }),
-      prisma.user.create({
+      prisma.product.create({
         data: {
-          name: "Kasir 1",
-          email: "kasir@kasir.com",
-          password: hashedKasirPassword,
-          role: "kasir",
-          phone: "0291-123457",
-          address: "Jl. Kasir No. 2, Kudus",
-          isActive: true,
+          name: "Pensil 2B Faber Castell",
+          description: "Pensil kayu berkualitas tinggi",
+          barcode: "PEN002",
+          price: 3000,
+          stock: 200,
+          categoryId: categories[0].id,
         },
       }),
-      prisma.user.create({
+      prisma.product.create({
         data: {
-          name: "Staff Gudang",
-          email: "gudang@kasir.com",
-          password: hashedGudangPassword,
-          role: "gudang",
-          phone: "0291-123458",
-          address: "Jl. Gudang No. 3, Kudus",
-          isActive: true,
+          name: "Pulpen Joyko GP-265",
+          description: "Pulpen gel warna biru tinta halus",
+          barcode: "PEN003",
+          price: 2500,
+          stock: 120,
+          categoryId: categories[0].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Pensil Mekanik 0.5mm",
+          description: "Pensil mekanik dengan grip nyaman",
+          barcode: "PEN004",
+          price: 8500,
+          stock: 80,
+          categoryId: categories[0].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Set Pulpen Warna Standler (12pcs)",
+          description: "Set pulpen warna lengkap 12 warna",
+          barcode: "PEN005",
+          price: 45000,
+          stock: 25,
+          categoryId: categories[0].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Pensil Warna Greebel (24pcs)",
+          description: "Pensil warna premium 24 warna",
+          barcode: "PEN006",
+          price: 35000,
+          stock: 30,
+          categoryId: categories[0].id,
+        },
+      }),
+
+      // Buku & Kertas
+      prisma.product.create({
+        data: {
+          name: "Buku Tulis 38 Lembar Sinar Dunia",
+          description: "Buku tulis garis standar 38 lembar",
+          barcode: "BUK001",
+          price: 3500,
+          stock: 300,
+          categoryId: categories[1].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Buku Gambar A4",
+          description: "Buku gambar polos ukuran A4",
+          barcode: "BUK002",
+          price: 8000,
+          stock: 100,
+          categoryId: categories[1].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Kertas HVS A4 70gsm (1 Rim)",
+          description: "Kertas fotocopy putih 500 lembar",
+          barcode: "KRT001",
+          price: 45000,
+          stock: 50,
+          categoryId: categories[1].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Buku Tulis 58 Lembar Campus",
+          description: "Buku tulis garis tebal 58 lembar",
+          barcode: "BUK003",
+          price: 5000,
+          stock: 200,
+          categoryId: categories[1].id,
+        },
+      }),
+
+      // Alat Gambar
+      prisma.product.create({
+        data: {
+          name: "Crayon Joyko 12 Warna",
+          description: "Crayon lilin berkualitas 12 warna",
+          barcode: "ART001",
+          price: 12000,
+          stock: 75,
+          categoryId: categories[2].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Spidol Snowman Whiteboard",
+          description: "Spidol papan tulis warna hitam",
+          barcode: "ART002",
+          price: 8500,
+          stock: 60,
+          categoryId: categories[2].id,
+        },
+      }),
+
+      // Perlengkapan Kantor
+      prisma.product.create({
+        data: {
+          name: "Stapler Joyko HD-10",
+          description: "Stapler kecil untuk 10 lembar",
+          barcode: "OFF001",
+          price: 15000,
+          stock: 40,
+          categoryId: categories[3].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Isi Staples No.10",
+          description: "Isi stapler ukuran standar",
+          barcode: "OFF002",
+          price: 2000,
+          stock: 200,
+          categoryId: categories[3].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Paper Clip Joyko (1 Box)",
+          description: "Klip kertas ukuran sedang",
+          barcode: "OFF003",
+          price: 8000,
+          stock: 80,
+          categoryId: categories[3].id,
+        },
+      }),
+
+      // Penggaris & Geometri
+      prisma.product.create({
+        data: {
+          name: "Penggaris Plastik 30cm",
+          description: "Penggaris transparan 30 cm",
+          barcode: "GEO001",
+          price: 3000,
+          stock: 150,
+          categoryId: categories[4].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Jangka Kompas Butterfly",
+          description: "Jangka untuk menggambar lingkaran",
+          barcode: "GEO002",
+          price: 25000,
+          stock: 35,
+          categoryId: categories[4].id,
+        },
+      }),
+
+      // Tas & Tempat Pensil
+      prisma.product.create({
+        data: {
+          name: "Tempat Pensil Dompet Kain",
+          description: "Tempat pensil model dompet",
+          barcode: "BAG001",
+          price: 15000,
+          stock: 90,
+          categoryId: categories[5].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Tas Ransel Sekolah",
+          description: "Tas ransel untuk pelajar",
+          barcode: "BAG002",
+          price: 85000,
+          stock: 20,
+          categoryId: categories[5].id,
+        },
+      }),
+
+      // Stationery Lainnya
+      prisma.product.create({
+        data: {
+          name: "Penghapus Faber Castell",
+          description: "Penghapus putih berkualitas",
+          barcode: "STA001",
+          price: 2500,
+          stock: 180,
+          categoryId: categories[6].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Tip-Ex Correction Pen",
+          description: "Pen koreksi untuk menutupi kesalahan",
+          barcode: "STA002",
+          price: 7500,
+          stock: 70,
+          categoryId: categories[6].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Double Tape 1 inch",
+          description: "Perekat dua sisi lebar 1 inch",
+          barcode: "STA003",
+          price: 12000,
+          stock: 60,
+          categoryId: categories[6].id,
+        },
+      }),
+      prisma.product.create({
+        data: {
+          name: "Cutter Kenko",
+          description: "Pisau cutter dengan mata pisau cadangan",
+          barcode: "STA004",
+          price: 8500,
+          stock: 45,
+          categoryId: categories[6].id,
         },
       }),
     ]);
 
-    console.log(`✅ Created ${users.length} users`);
-
-    // Create members
-    console.log("👤 Creating sample members...");
-    const members = await Promise.all([
+    // Create Members
+    console.log("👤 Creating members...");
+    await Promise.all([
       prisma.member.create({
         data: {
           memberId: "MBR001",
@@ -130,9 +361,9 @@ async function main() {
           phone: "081234567890",
           address: "Jl. Mawar No. 15, Kudus",
           discountRate: 0.05,
-          totalPurchase: 150000,
+          totalPurchase: 125000,
           visitCount: 8,
-          isActive: true,
+          lastVisit: new Date(),
         },
       }),
       prisma.member.create({
@@ -140,362 +371,98 @@ async function main() {
           memberId: "MBR002",
           name: "Siti Aminah",
           email: "siti@email.com",
-          phone: "081234567891",
-          address: "Jl. Melati No. 20, Kudus",
+          phone: "085678901234",
+          address: "Jl. Melati No. 22, Kudus",
           discountRate: 0.05,
-          totalPurchase: 75000,
-          visitCount: 3,
-          isActive: true,
+          totalPurchase: 89000,
+          visitCount: 5,
+          lastVisit: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        },
+      }),
+      prisma.member.create({
+        data: {
+          memberId: "MBR003",
+          name: "Ahmad Rahman",
+          email: "ahmad@email.com",
+          phone: "087890123456",
+          address: "Jl. Kenanga No. 8, Kudus",
+          discountRate: 0.05,
+          totalPurchase: 210000,
+          visitCount: 12,
+          lastVisit: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
         },
       }),
     ]);
 
-    console.log(`✅ Created ${members.length} members`);
-
-    // Create products for stationery store
-    console.log("📦 Creating stationery products...");
-    const productsData = [
-      // Pulpen & Marker (Category 1) - FAVORITES
-      {
-        name: "Pilot G2 Gel Pen 0.7mm",
-        description: "Pulpen gel premium dengan tinta halus dan tahan lama",
-        price: 5500,
-        stock: 25,
-        barcode: "PEN001",
-        categoryId: categories[0].id,
-        brand: "Pilot",
-        supplier: "PT Pilot Indonesia",
-        unit: "pcs",
-        isFavorite: true,
-        favoriteOrder: 1,
-        minStock: 10,
-      },
-      {
-        name: "Stabilo Boss Original Highlighter",
-        description: "Marker stabilo untuk highlighting dengan berbagai warna",
-        price: 8500,
-        stock: 30,
-        barcode: "STB001",
-        categoryId: categories[0].id,
-        brand: "Stabilo",
-        supplier: "PT Stabilo Indonesia",
-        unit: "pcs",
-        isFavorite: false,
-        minStock: 15,
-      },
-      {
-        name: "Snowman Permanent Marker",
-        description: "Spidol permanen hitam untuk berbagai keperluan",
-        price: 4500,
-        stock: 40,
-        barcode: "SNW001",
-        categoryId: categories[0].id,
-        brand: "Snowman",
-        supplier: "CV Alat Tulis Jaya",
-        unit: "pcs",
-        isFavorite: false,
-        minStock: 20,
-      },
-
-      // Pensil & Pensil Warna (Category 2) - FAVORITES
-      {
-        name: "Faber Castell 2B Pencil",
-        description:
-          "Pensil 2B berkualitas tinggi untuk menulis dan menggambar",
-        price: 2500,
-        stock: 50,
-        barcode: "PEN002",
-        categoryId: categories[1].id,
-        brand: "Faber Castell",
-        supplier: "PT Faber Castell Indonesia",
-        unit: "pcs",
-        isFavorite: true,
-        favoriteOrder: 3,
-        minStock: 25,
-      },
-      {
-        name: "Faber Castell Pensil Warna 12 Set",
-        description: "Set pensil warna 12 warna untuk mewarnai",
-        price: 18500,
-        stock: 15,
-        barcode: "FC001",
-        categoryId: categories[1].id,
-        brand: "Faber Castell",
-        supplier: "PT Faber Castell Indonesia",
-        unit: "set",
-        isFavorite: false,
-        minStock: 8,
-      },
-
-      // Buku & Kertas (Category 3) - FAVORITES
-      {
-        name: "Buku Tulis Sinar Dunia 38 Lembar",
-        description: "Buku tulis dengan garis standar 38 lembar",
-        price: 3500,
-        stock: 100,
-        barcode: "BUK001",
-        categoryId: categories[2].id,
-        brand: "Sinar Dunia",
-        supplier: "PT Sinar Dunia",
-        unit: "pcs",
-        isFavorite: true,
-        favoriteOrder: 2,
-        minStock: 30,
-      },
-      {
-        name: "Kertas HVS A4 70gsm (1 Rim)",
-        description: "Kertas HVS putih A4 70gsm isi 500 lembar",
-        price: 45000,
-        stock: 25,
-        barcode: "HVS001",
-        categoryId: categories[2].id,
-        brand: "Paper One",
-        supplier: "PT Paper Sejahtera",
-        unit: "rim",
-        isFavorite: false,
-        minStock: 10,
-      },
-      {
-        name: "Amplop Putih No. 90",
-        description: "Amplop putih ukuran standar untuk surat",
-        price: 500,
-        stock: 200,
-        barcode: "AMP001",
-        categoryId: categories[2].id,
-        brand: "Standard",
-        supplier: "CV Amplop Jaya",
-        unit: "pcs",
-        isFavorite: false,
-        minStock: 50,
-      },
-
-      // Perlengkapan Kantor (Category 4) - FAVORITES
-      {
-        name: "Penggaris Plastik 30cm",
-        description: "Penggaris plastik transparan 30cm",
-        price: 3000,
-        stock: 35,
-        barcode: "RUL001",
-        categoryId: categories[3].id,
-        brand: "Standard",
-        supplier: "CV Alat Kantor",
-        unit: "pcs",
-        isFavorite: true,
-        favoriteOrder: 5,
-        minStock: 15,
-      },
-      {
-        name: "Gunting Joyko SC-848",
-        description: "Gunting kantor berkualitas dengan pegangan nyaman",
-        price: 12000,
-        stock: 20,
-        barcode: "GUN001",
-        categoryId: categories[3].id,
-        brand: "Joyko",
-        supplier: "PT Joyko Indonesia",
-        unit: "pcs",
-        isFavorite: false,
-        minStock: 8,
-      },
-      {
-        name: "Stepler Joyko HD-50",
-        description: "Stepler kecil untuk 20 lembar kertas",
-        price: 15000,
-        stock: 15,
-        barcode: "STP001",
-        categoryId: categories[3].id,
-        brand: "Joyko",
-        supplier: "PT Joyko Indonesia",
-        unit: "pcs",
-        isFavorite: false,
-        minStock: 8,
-      },
-      {
-        name: "Paper Clip No. 3 (1 Box)",
-        description: "Paper clip besi ukuran standar isi 100 pcs",
-        price: 8000,
-        stock: 25,
-        barcode: "PC001",
-        categoryId: categories[3].id,
-        brand: "Standard",
-        supplier: "CV Alat Kantor",
-        unit: "box",
-        isFavorite: false,
-        minStock: 10,
-      },
-
-      // Alat Gambar & Lukis (Category 5)
-      {
-        name: "Crayon Faber Castell 12 Warna",
-        description: "Crayon warna berkualitas untuk anak-anak",
-        price: 18500,
-        stock: 20,
-        barcode: "CRY001",
-        categoryId: categories[4].id,
-        brand: "Faber Castell",
-        supplier: "PT Faber Castell Indonesia",
-        unit: "set",
-        isFavorite: false,
-        minStock: 8,
-      },
-      {
-        name: "Cat Air Joyko 12 Warna",
-        description: "Cat air untuk melukis dengan kuas",
-        price: 25000,
-        stock: 12,
-        barcode: "CAT001",
-        categoryId: categories[4].id,
-        brand: "Joyko",
-        supplier: "PT Joyko Indonesia",
-        unit: "set",
-        isFavorite: false,
-        minStock: 5,
-      },
-
-      // Lem & Perekat (Category 6) - FAVORITES
-      {
-        name: "Lem Povinal 60ml",
-        description: "Lem cair serbaguna untuk kertas dan karton",
-        price: 6500,
-        stock: 30,
-        barcode: "LEM001",
-        categoryId: categories[5].id,
-        brand: "Povinal",
-        supplier: "PT Povinal Indonesia",
-        unit: "pcs",
-        isFavorite: true,
-        favoriteOrder: 6,
-        minStock: 15,
-      },
-      {
-        name: "Lem Stick UHU 21g",
-        description: "Lem stick praktis untuk kertas",
-        price: 12000,
-        stock: 25,
-        barcode: "UHU001",
-        categoryId: categories[5].id,
-        brand: "UHU",
-        supplier: "PT UHU Indonesia",
-        unit: "pcs",
-        isFavorite: false,
-        minStock: 10,
-      },
-      {
-        name: "Double Tape 1 Inch",
-        description: "Double tape putih lebar 1 inch",
-        price: 8500,
-        stock: 20,
-        barcode: "DT001",
-        categoryId: categories[5].id,
-        brand: "Standard",
-        supplier: "CV Alat Kantor",
-        unit: "roll",
-        isFavorite: false,
-        minStock: 10,
-      },
-
-      // Penghapus & Korektor (Category 7) - FAVORITES
-      {
-        name: "Penghapus Steadtler Mars Plastic",
-        description: "Penghapus putih berkualitas tinggi",
-        price: 4000,
-        stock: 40,
-        barcode: "ERA001",
-        categoryId: categories[6].id,
-        brand: "Steadtler",
-        supplier: "PT Steadtler Indonesia",
-        unit: "pcs",
-        isFavorite: true,
-        favoriteOrder: 4,
-        minStock: 20,
-      },
-      {
-        name: "Tip-Ex Correction Fluid",
-        description: "Cairan koreksi putih dengan kuas",
-        price: 7500,
-        stock: 25,
-        barcode: "TPX001",
-        categoryId: categories[6].id,
-        brand: "Tip-Ex",
-        supplier: "PT Correction Indonesia",
-        unit: "pcs",
-        isFavorite: false,
-        minStock: 12,
-      },
-    ];
-
-    const products = [];
-    for (const productData of productsData) {
-      const product = await prisma.product.create({
-        data: productData,
-      });
-      products.push(product);
-    }
-
-    console.log(`✅ Created ${products.length} stationery products`);
-
-    // Create system settings
+    // Create Settings
     console.log("⚙️ Creating system settings...");
-    const settings = await Promise.all([
+    await Promise.all([
       prisma.settings.create({
         data: {
-          key: "tax_rate",
-          value: "0.11",
-          type: "NUMBER",
-        },
-      }),
-      prisma.settings.create({
-        data: {
-          key: "tax_enabled",
+          key: "memberDiscountEnabled",
           value: "true",
           type: "BOOLEAN",
         },
       }),
       prisma.settings.create({
         data: {
-          key: "member_discount_rate",
-          value: "0.05",
-          type: "NUMBER",
-        },
-      }),
-      prisma.settings.create({
-        data: {
-          key: "member_discount_enabled",
-          value: "true",
-          type: "BOOLEAN",
-        },
-      }),
-      prisma.settings.create({
-        data: {
-          key: "min_stock_alert",
+          key: "minStock",
           value: "10",
           type: "NUMBER",
         },
       }),
       prisma.settings.create({
         data: {
-          key: "store_name",
+          key: "autoStockAlert",
+          value: "true",
+          type: "BOOLEAN",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "favoriteProductIds",
+          value: JSON.stringify([
+            products[0].id,
+            products[1].id,
+            products[6].id,
+            products[7].id,
+            products[11].id,
+            products[15].id,
+          ]),
+          type: "JSON",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "maxFavorites",
+          value: "6",
+          type: "NUMBER",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "storeName",
           value: "Toko Alat Tulis & Kantor",
           type: "STRING",
         },
       }),
       prisma.settings.create({
         data: {
-          key: "store_address",
+          key: "storeAddress",
           value: "Jl. Pendidikan No. 123, Kudus, Jawa Tengah",
           type: "STRING",
         },
       }),
       prisma.settings.create({
         data: {
-          key: "store_phone",
+          key: "storePhone",
           value: "0291-123456",
           type: "STRING",
         },
       }),
       prisma.settings.create({
         data: {
-          key: "receipt_footer",
+          key: "receiptFooter",
           value:
             "Terima kasih atas kunjungan Anda!\nSelamat berbelanja kembali 😊",
           type: "STRING",
@@ -503,145 +470,432 @@ async function main() {
       }),
       prisma.settings.create({
         data: {
-          key: "auto_print_receipt",
+          key: "printReceiptAuto",
           value: "true",
+          type: "BOOLEAN",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "currency",
+          value: "IDR",
+          type: "STRING",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "currencySymbol",
+          value: "Rp",
+          type: "STRING",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "dateFormat",
+          value: "dd/MM/yyyy",
+          type: "STRING",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "allowDiscountEntry",
+          value: "true",
+          type: "BOOLEAN",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "allowNegativeStock",
+          value: "false",
+          type: "BOOLEAN",
+        },
+      }),
+      prisma.settings.create({
+        data: {
+          key: "requireBarcodeForCheckout",
+          value: "false",
           type: "BOOLEAN",
         },
       }),
     ]);
 
-    console.log(`✅ Created ${settings.length} system settings`);
-
-    // Create sample sales
+    // Create sample sales transactions
     console.log("💰 Creating sample sales...");
-    const sale = await prisma.sale.create({
-      data: {
-        saleNumber:
-          "TRX-001-" + new Date().toISOString().slice(0, 10).replace(/-/g, ""),
-        subtotal: 14000,
-        memberDiscount: 700, // 5% member discount
-        transactionDiscount: 0,
-        totalDiscount: 700,
-        tax: 1463, // 11% from (subtotal - discount)
-        total: 14763,
-        cashAmount: 15000,
-        change: 237,
-        paymentMethod: "cash",
-        memberId: members[0].id,
-        userId: users[1].id, // Kasir
-        receiptPrinted: true,
-        notes: "Transaksi sample untuk testing",
-      },
-    });
 
-    // Create sale items
-    await Promise.all([
-      prisma.saleItem.create({
+    // Get member IDs for sales
+    const members = await prisma.member.findMany();
+
+    const sampleSales = await Promise.all([
+      prisma.sale.create({
         data: {
-          saleId: sale.id,
-          productId: products[0].id, // Pilot G2 Gel Pen
-          quantity: 2,
-          price: 5500,
-          subtotal: 11000,
-          discount: 0,
+          saleNumber: "TRX-001-20240315",
+          subtotal: 19000,
+          memberDiscount: 950, // 5% member discount
+          transactionDiscount: 0,
+          totalDiscount: 950,
+          tax: 1980.55,
+          total: 20030.55,
+          cashAmount: 25000,
+          change: 4969.45,
+          paymentMethod: "cash",
+          memberId: members[0].id, // Budi Santoso
+          userId: kasirUser.id,
+          notes: "Pembelian alat tulis sekolah",
         },
       }),
-      prisma.saleItem.create({
+      prisma.sale.create({
         data: {
-          saleId: sale.id,
-          productId: products[2].id, // Buku Tulis
-          quantity: 1,
-          price: 3000,
-          subtotal: 3000,
-          discount: 0,
+          saleNumber: "TRX-002-20240315",
+          subtotal: 45000,
+          memberDiscount: 0,
+          transactionDiscount: 5000, // Manual discount
+          totalDiscount: 5000,
+          tax: 4400,
+          total: 44400,
+          cashAmount: 50000,
+          change: 5600,
+          paymentMethod: "cash",
+          userId: kasirUser.id,
+          notes: "Pembelian kertas HVS",
+        },
+      }),
+      prisma.sale.create({
+        data: {
+          saleNumber: "TRX-003-20240316",
+          subtotal: 28500,
+          memberDiscount: 1425, // 5% member discount
+          transactionDiscount: 0,
+          totalDiscount: 1425,
+          tax: 2977.25,
+          total: 30052.25,
+          cashAmount: 35000,
+          change: 4947.75,
+          paymentMethod: "cash",
+          memberId: members[1].id, // Siti Aminah
+          userId: kasirUser.id,
+          notes: "Pembelian perlengkapan kantor",
         },
       }),
     ]);
 
-    // Create stock movements for the sale
+    // Create sale items for the sample sales
+    console.log("🛒 Creating sale items...");
     await Promise.all([
+      // Sale 1 items (Budi Santoso - Member discount)
+      prisma.saleItem.create({
+        data: {
+          saleId: sampleSales[0].id,
+          productId: products[0].id, // Pulpen Pilot G2
+          quantity: 2,
+          price: 5500,
+          subtotal: 11000,
+        },
+      }),
+      prisma.saleItem.create({
+        data: {
+          saleId: sampleSales[0].id,
+          productId: products[6].id, // Buku Tulis 38 Lembar
+          quantity: 2,
+          price: 3500,
+          subtotal: 7000,
+        },
+      }),
+      prisma.saleItem.create({
+        data: {
+          saleId: sampleSales[0].id,
+          productId: products[19].id, // Penghapus
+          quantity: 1,
+          price: 2500,
+          subtotal: 2500,
+        },
+      }),
+
+      // Sale 2 items (Non-member - Manual discount)
+      prisma.saleItem.create({
+        data: {
+          saleId: sampleSales[1].id,
+          productId: products[8].id, // Kertas HVS A4
+          quantity: 1,
+          price: 45000,
+          subtotal: 45000,
+        },
+      }),
+
+      // Sale 3 items (Siti Aminah - Member discount)
+      prisma.saleItem.create({
+        data: {
+          saleId: sampleSales[2].id,
+          productId: products[12].id, // Stapler
+          quantity: 1,
+          price: 15000,
+          subtotal: 15000,
+        },
+      }),
+      prisma.saleItem.create({
+        data: {
+          saleId: sampleSales[2].id,
+          productId: products[13].id, // Isi Staples
+          quantity: 5,
+          price: 2000,
+          subtotal: 10000,
+        },
+      }),
+      prisma.saleItem.create({
+        data: {
+          saleId: sampleSales[2].id,
+          productId: products[1].id, // Pensil 2B
+          quantity: 1,
+          price: 3500,
+          subtotal: 3500,
+        },
+      }),
+    ]);
+
+    // Create stock movements for the sales
+    console.log("📊 Creating stock movements...");
+    await Promise.all([
+      // Stock movements for sale 1
       prisma.stockMovement.create({
         data: {
           productId: products[0].id,
           type: "OUT",
           quantity: -2,
-          previousStock: 25,
-          newStock: 23,
-          saleId: sale.id,
-          reference: sale.saleNumber,
-          notes: "Penjualan barang",
-          userId: users[1].id,
+          previousStock: 150,
+          newStock: 148,
+          saleId: sampleSales[0].id,
+          reference: "TRX-001-20240315",
+          notes: "Sale transaction",
+          userId: kasirUser.id,
         },
       }),
       prisma.stockMovement.create({
         data: {
-          productId: products[2].id,
+          productId: products[6].id,
+          type: "OUT",
+          quantity: -2,
+          previousStock: 300,
+          newStock: 298,
+          saleId: sampleSales[0].id,
+          reference: "TRX-001-20240315",
+          notes: "Sale transaction",
+          userId: kasirUser.id,
+        },
+      }),
+      prisma.stockMovement.create({
+        data: {
+          productId: products[19].id,
           type: "OUT",
           quantity: -1,
-          previousStock: 100,
-          newStock: 99,
-          saleId: sale.id,
-          reference: sale.saleNumber,
-          notes: "Penjualan barang",
-          userId: users[1].id,
+          previousStock: 180,
+          newStock: 179,
+          saleId: sampleSales[0].id,
+          reference: "TRX-001-20240315",
+          notes: "Sale transaction",
+          userId: kasirUser.id,
+        },
+      }),
+
+      // Stock movements for sale 2
+      prisma.stockMovement.create({
+        data: {
+          productId: products[8].id,
+          type: "OUT",
+          quantity: -1,
+          previousStock: 50,
+          newStock: 49,
+          saleId: sampleSales[1].id,
+          reference: "TRX-002-20240315",
+          notes: "Sale transaction",
+          userId: kasirUser.id,
+        },
+      }),
+
+      // Stock movements for sale 3
+      prisma.stockMovement.create({
+        data: {
+          productId: products[12].id,
+          type: "OUT",
+          quantity: -1,
+          previousStock: 40,
+          newStock: 39,
+          saleId: sampleSales[2].id,
+          reference: "TRX-003-20240316",
+          notes: "Sale transaction",
+          userId: kasirUser.id,
+        },
+      }),
+      prisma.stockMovement.create({
+        data: {
+          productId: products[13].id,
+          type: "OUT",
+          quantity: -5,
+          previousStock: 200,
+          newStock: 195,
+          saleId: sampleSales[2].id,
+          reference: "TRX-003-20240316",
+          notes: "Sale transaction",
+          userId: kasirUser.id,
+        },
+      }),
+      prisma.stockMovement.create({
+        data: {
+          productId: products[1].id,
+          type: "OUT",
+          quantity: -1,
+          previousStock: 200,
+          newStock: 199,
+          saleId: sampleSales[2].id,
+          reference: "TRX-003-20240316",
+          notes: "Sale transaction",
+          userId: kasirUser.id,
+        },
+      }),
+
+      // Sample stock adjustments (Gudang activities)
+      prisma.stockMovement.create({
+        data: {
+          productId: products[1].id,
+          type: "IN",
+          quantity: 100,
+          previousStock: 199,
+          newStock: 299,
+          reference: "STK-IN-001",
+          notes: "Stock replenishment - Pensil 2B",
+          userId: gudangUser.id,
+        },
+      }),
+      prisma.stockMovement.create({
+        data: {
+          productId: products[4].id,
+          type: "IN",
+          quantity: 25,
+          previousStock: 25,
+          newStock: 50,
+          reference: "STK-IN-002",
+          notes: "Stock replenishment - Set Pulpen Warna",
+          userId: gudangUser.id,
+        },
+      }),
+      prisma.stockMovement.create({
+        data: {
+          productId: products[16].id,
+          type: "ADJUSTMENT",
+          quantity: -5,
+          previousStock: 35,
+          newStock: 30,
+          reference: "STK-ADJ-001",
+          notes: "Stock adjustment - Damaged items",
+          userId: gudangUser.id,
         },
       }),
     ]);
 
-    console.log("✅ Created sample sale with stock movements");
+    // Update product stocks based on movements
+    console.log("🔄 Updating product stocks...");
+    await Promise.all([
+      prisma.product.update({
+        where: { id: products[0].id },
+        data: { stock: 148 },
+      }),
+      prisma.product.update({
+        where: { id: products[1].id },
+        data: { stock: 299 }, // After sale and restock
+      }),
+      prisma.product.update({
+        where: { id: products[4].id },
+        data: { stock: 50 }, // After restock
+      }),
+      prisma.product.update({
+        where: { id: products[6].id },
+        data: { stock: 298 },
+      }),
+      prisma.product.update({
+        where: { id: products[8].id },
+        data: { stock: 49 },
+      }),
+      prisma.product.update({
+        where: { id: products[12].id },
+        data: { stock: 39 },
+      }),
+      prisma.product.update({
+        where: { id: products[13].id },
+        data: { stock: 195 },
+      }),
+      prisma.product.update({
+        where: { id: products[16].id },
+        data: { stock: 30 }, // After adjustment
+      }),
+      prisma.product.update({
+        where: { id: products[19].id },
+        data: { stock: 179 },
+      }),
+    ]);
 
-    console.log("🎉 Seed completed successfully!");
+    // Update member purchase totals
+    console.log("👤 Updating member statistics...");
+    await Promise.all([
+      prisma.member.update({
+        where: { id: members[0].id }, // Budi Santoso
+        data: {
+          totalPurchase: 145030.55, // Original + new transaction
+          visitCount: 9,
+          lastVisit: new Date(),
+        },
+      }),
+      prisma.member.update({
+        where: { id: members[1].id }, // Siti Aminah
+        data: {
+          totalPurchase: 119052.25, // Original + new transaction
+          visitCount: 6,
+          lastVisit: new Date(),
+        },
+      }),
+    ]);
 
-    // Summary
-    const finalCategoryCount = await prisma.category.count();
-    const finalProductCount = await prisma.product.count();
-    const finalUserCount = await prisma.user.count();
-    const finalMemberCount = await prisma.member.count();
-    const finalSaleCount = await prisma.sale.count();
-    const finalSettingsCount = await prisma.settings.count();
-    const favoriteProducts = await prisma.product.findMany({
-      where: { isFavorite: true },
-      orderBy: { favoriteOrder: "asc" },
-    });
+    console.log("✅ Database seeding completed successfully!");
+    console.log(`
+🎉 Seeding Summary:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 Users Created: 3
+   • Admin: admin@kasir.com / admin123
+   • Kasir: kasir@kasir.com / kasir123  
+   • Gudang: gudang@kasir.com / gudang123
 
-    console.log("📊 Database summary:");
-    console.log(`   - Categories: ${finalCategoryCount}`);
-    console.log(`   - Users: ${finalUserCount}`);
-    console.log(`   - Members: ${finalMemberCount}`);
-    console.log(`   - Products: ${finalProductCount}`);
-    console.log(`   - Favorite Products: ${favoriteProducts.length}`);
-    console.log(`   - Sales: ${finalSaleCount}`);
-    console.log(`   - Settings: ${finalSettingsCount}`);
+📁 Categories Created: ${categories.length}
+📦 Products Created: ${products.length}
+👤 Members Created: 3 (MBR001, MBR002, MBR003)
+💰 Sample Sales: 3 transactions with complete items
+⚙️ Settings: Complete system configuration
+📊 Stock Movements: 15 transaction and adjustment records
 
-    console.log("🔑 Login credentials:");
-    console.log("   👨‍💼 Admin: admin@kasir.com / admin123");
-    console.log("   👩‍💻 Kasir: kasir@kasir.com / kasir123");
-    console.log("   📦 Gudang: gudang@kasir.com / gudang123");
+🌟 Favorite Products Set:
+   F1: ${products[0].name}
+   F2: ${products[1].name}  
+   F3: ${products[6].name}
+   F4: ${products[7].name}
+   F5: ${products[11].name}
+   F6: ${products[15].name}
 
-    console.log("👤 Sample members:");
-    console.log("   🆔 Member ID: MBR001 (Budi Santoso)");
-    console.log("   🆔 Member ID: MBR002 (Siti Aminah)");
-
-    console.log("⭐ Favorite products (F1-F6):");
-    favoriteProducts.forEach((product, index) => {
-      console.log(
-        `   F${index + 1}: ${product.name} - Rp ${product.price.toLocaleString(
-          "id-ID"
-        )}`
-      );
-    });
+🚀 System ready for use!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
   } catch (error) {
-    console.error("❌ Seeding failed:", error);
+    console.error("❌ Error during seeding:", error);
     throw error;
   }
 }
 
+// Execute main function
 main()
-  .then(async () => {
-    await prisma.$disconnect();
+  .then(() => {
+    console.log("🎉 Database seeding completed successfully!");
   })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
+  .catch((e) => {
+    console.error("❌ Seeding failed:", e);
     process.exit(1);
+  })
+  .finally(async () => {
+    console.log("🔌 Disconnecting from database...");
+    await prisma.$disconnect();
+    console.log("✅ Database connection closed.");
   });

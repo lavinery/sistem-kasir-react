@@ -1,28 +1,39 @@
+// backend/middleware/auth.js - JWT Authentication Middleware
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
 
 const auth = async (req, res, next) => {
   try {
+    // Get token from header
     const authHeader = req.header("Authorization");
 
     if (!authHeader) {
-      return res.status(401).json({ message: "No token provided" });
+      return res.status(401).json({ error: "No token, authorization denied" });
     }
 
-    const token = authHeader.replace("Bearer ", "");
+    // Check if token starts with 'Bearer '
+    if (!authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Invalid token format" });
+    }
+
+    // Extract token
+    const token = authHeader.substring(7);
 
     if (!token) {
-      return res.status(401).json({ message: "Invalid token format" });
+      return res.status(401).json({ error: "No token, authorization denied" });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    // Verify token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "fallback-secret"
+    );
 
     // Get user from database
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: decoded.id },
       select: {
         id: true,
         name: true,
@@ -33,28 +44,33 @@ const auth = async (req, res, next) => {
     });
 
     if (!user) {
-      return res.status(401).json({ message: "User not found" });
+      return res.status(401).json({ error: "User not found" });
     }
 
     if (!user.isActive) {
-      return res.status(401).json({ message: "User account is deactivated" });
+      return res.status(401).json({ error: "User account is inactive" });
     }
 
+    // Add user to request
     req.user = user;
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
 
     if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ message: "Invalid token" });
+      return res.status(401).json({ error: "Invalid token" });
     }
 
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Token expired" });
+      return res.status(401).json({ error: "Token expired" });
     }
 
-    res.status(500).json({ message: "Server error during authentication" });
+    res.status(500).json({ error: "Server error in authentication" });
   }
 };
 
+// Alternative function name for backward compatibility
+const authenticateToken = auth;
+
 module.exports = auth;
+module.exports.authenticateToken = authenticateToken;
