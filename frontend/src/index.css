@@ -1,7 +1,7 @@
 /* frontend/src/index.css - Complete styling system */
 @tailwind base;
-@tailwind components;
 @tailwind utilities;
+@tailwind components;
 
 /* Global Reset & Base Styles */
 * {

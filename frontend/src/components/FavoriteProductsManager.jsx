@@ -1,19 +1,22 @@
-// frontend/src/components/FavoriteProductsManager.jsx
+// frontend/src/components/FavoriteProductsManager.jsx - Drag & Drop Favorites
 import React, { useState, useEffect } from 'react';
-import { Star, Package, Plus, X, Search, Grid } from 'lucide-react';
-import { productsAPI, settingsAPI } from '../utils/api';
+import { 
+  Star, Package, Search, Plus, Trash2, Move, 
+  CheckCircle, AlertCircle, Loader, Grid3X3, List
+} from 'lucide-react';
+import { productsAPI, favoritesAPI } from '../utils/api';
 
 const FavoriteProductsManager = ({ onUpdate }) => {
-  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [favoriteProducts, setFavoriteProducts] = useState([]);
-  const [favoriteIds, setFavoriteIds] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [viewMode, setViewMode] = useState('grid');
+  const [draggedItem, setDraggedItem] = useState(null);
 
-  const maxFavorites = 6;
+  const MAX_FAVORITES = 6;
 
   useEffect(() => {
     loadData();
@@ -22,320 +25,314 @@ const FavoriteProductsManager = ({ onUpdate }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [productsData, settingsData, categoriesData] = await Promise.all([
+      const [products, favorites] = await Promise.all([
         productsAPI.getAll(),
-        settingsAPI.getAll(),
-        fetch('http://localhost:5000/api/categories').then(res => res.json())
+        favoritesAPI.getAll()
       ]);
       
-      setProducts(productsData || []);
-      setCategories(categoriesData || []);
-      
-      const currentFavoriteIds = settingsData.favoriteProductIds || [];
-      setFavoriteIds(currentFavoriteIds);
-      
-      // Get favorite products details
-      const favorites = (productsData || [])
-        .filter(product => currentFavoriteIds.includes(product.id))
-        .sort((a, b) => currentFavoriteIds.indexOf(a.id) - currentFavoriteIds.indexOf(b.id));
-      setFavoriteProducts(favorites);
-      
+      setAllProducts(products || []);
+      setFavoriteProducts(favorites || []);
     } catch (error) {
       console.error('Error loading data:', error);
+      showMessage('❌ Error loading data: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  const showMessage = (text, type = 'success') => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(''), 3000);
+  };
+
   const saveFavorites = async () => {
     try {
       setSaving(true);
-      await settingsAPI.update({ favoriteProductIds: favoriteIds });
+      const favoriteIds = favoriteProducts.map(p => p.id);
+      await favoritesAPI.update(favoriteIds);
       
       if (onUpdate) {
         onUpdate(favoriteIds);
       }
       
-      alert('✅ Produk favorit berhasil disimpan!');
+      showMessage('✅ Produk favorit berhasil disimpan!', 'success');
     } catch (error) {
       console.error('Error saving favorites:', error);
-      alert('❌ Gagal menyimpan produk favorit');
+      showMessage('❌ Gagal menyimpan: ' + error.message, 'error');
     } finally {
       setSaving(false);
     }
   };
 
   const addToFavorites = (product) => {
-    if (favoriteIds.length >= maxFavorites) {
-      alert(`Maksimal ${maxFavorites} produk favorit`);
+    if (favoriteProducts.length >= MAX_FAVORITES) {
+      showMessage(`⚠️ Maksimal ${MAX_FAVORITES} produk favorit`, 'warning');
       return;
     }
-    
-    if (favoriteIds.includes(product.id)) {
-      alert('Produk sudah ada dalam favorit');
+
+    if (favoriteProducts.find(p => p.id === product.id)) {
+      showMessage('⚠️ Produk sudah ada di favorit', 'warning');
       return;
     }
-    
-    const newFavoriteIds = [...favoriteIds, product.id];
-    setFavoriteIds(newFavoriteIds);
+
     setFavoriteProducts(prev => [...prev, product]);
   };
 
   const removeFromFavorites = (productId) => {
-    const newFavoriteIds = favoriteIds.filter(id => id !== productId);
-    setFavoriteIds(newFavoriteIds);
     setFavoriteProducts(prev => prev.filter(p => p.id !== productId));
   };
 
   const moveFavorite = (fromIndex, toIndex) => {
     const newFavorites = [...favoriteProducts];
-    const newIds = [...favoriteIds];
-    
-    // Swap products
-    [newFavorites[fromIndex], newFavorites[toIndex]] = [newFavorites[toIndex], newFavorites[fromIndex]];
-    [newIds[fromIndex], newIds[toIndex]] = [newIds[toIndex], newIds[fromIndex]];
-    
+    const [movedItem] = newFavorites.splice(fromIndex, 1);
+    newFavorites.splice(toIndex, 0, movedItem);
     setFavoriteProducts(newFavorites);
-    setFavoriteIds(newIds);
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.barcode?.includes(searchTerm);
-    const matchesCategory = selectedCategory === 'all' || 
-                           product.categoryId === parseInt(selectedCategory);
-    const notInFavorites = !favoriteIds.includes(product.id);
-    
-    return matchesSearch && matchesCategory && notInFavorites;
-  });
+  const handleDragStart = (e, index) => {
+    setDraggedItem(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
 
-  const formatCurrency = (amount) => {
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedItem !== null && draggedItem !== dropIndex) {
+      moveFavorite(draggedItem, dropIndex);
+    }
+    setDraggedItem(null);
+  };
+
+  const filteredProducts = allProducts.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    !favoriteProducts.find(p => p.id === product.id)
+  );
+
+  const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(amount);
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <span className="ml-2">Memuat produk...</span>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+          <p className="text-gray-600">Memuat produk...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Current Favorites */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-yellow-800 flex items-center gap-2">
-            <Star className="w-5 h-5" />
-            Produk Favorit Saat Ini ({favoriteProducts.length}/{maxFavorites})
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Star className="w-6 h-6 text-yellow-500" />
+            Kelola Produk Favorit
           </h3>
+          <p className="text-gray-600 text-sm mt-1">
+            Pilih maksimal {MAX_FAVORITES} produk untuk akses cepat di halaman transaksi
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
+          </button>
+          
           <button
             onClick={saveFavorites}
             disabled={saving}
-            className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
-            {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+            {saving ? <Loader className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+            {saving ? 'Menyimpan...' : 'Simpan Favorit'}
           </button>
+        </div>
+      </div>
+
+      {/* Message */}
+      {message && (
+        <div className={`p-3 rounded-lg border ${
+          message.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+          message.type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' :
+          'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
+      {/* Current Favorites */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-semibold text-yellow-800 flex items-center gap-2">
+            <Star className="w-5 h-5" />
+            Produk Favorit Saat Ini ({favoriteProducts.length}/{MAX_FAVORITES})
+          </h4>
+          {favoriteProducts.length > 0 && (
+            <p className="text-sm text-yellow-700">
+              <Move className="w-4 h-4 inline mr-1" />
+              Drag untuk mengubah urutan
+            </p>
+          )}
         </div>
 
         {favoriteProducts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Star className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-            <p>Belum ada produk favorit</p>
-            <p className="text-sm">Tambahkan produk dari daftar di bawah</p>
+          <div className="text-center py-8 text-yellow-700">
+            <Star className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p className="font-medium">Belum ada produk favorit</p>
+            <p className="text-sm">Pilih produk dari daftar di bawah</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className={`grid gap-3 ${
+            viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
+          }`}>
             {favoriteProducts.map((product, index) => (
-              <div key={product.id} className="bg-white rounded-lg border p-4 relative">
-                {/* Remove button */}
-                <button
-                  onClick={() => removeFromFavorites(product.id)}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-
-                {/* Position badge */}
-                <div className="absolute top-2 left-2 bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                  {index + 1}
-                </div>
-
-                {/* Product info */}
-                <div className="pt-6">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg mb-3 flex items-center justify-center mx-auto">
-                    <Package className="w-8 h-8 text-gray-400" />
+              <div
+                key={product.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`bg-white rounded-lg border-2 p-4 cursor-move transition-all ${
+                  draggedItem === index ? 'border-blue-400 shadow-lg scale-105' : 'border-yellow-300 hover:border-yellow-400'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        #{index + 1}
+                      </span>
+                      <Move className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <h5 className="font-semibold text-gray-800 text-sm leading-tight">
+                      {product.name}
+                    </h5>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {product.category?.name || 'Tanpa Kategori'}
+                    </p>
                   </div>
-                  
-                  <h4 className="font-medium text-sm text-center mb-2 line-clamp-2">
-                    {product.name}
-                  </h4>
-                  
-                  <div className="text-center">
-                    <p className="text-blue-600 font-semibold">
-                      {formatCurrency(product.price)}
+                  <button
+                    onClick={() => removeFromFavorites(product.id)}
+                    className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-blue-600 text-sm">
+                      {formatPrice(product.price)}
                     </p>
                     <p className="text-xs text-gray-500">
                       Stok: {product.stock}
                     </p>
                   </div>
-                </div>
-
-                {/* Move buttons */}
-                <div className="flex justify-center gap-2 mt-3">
-                  <button
-                    onClick={() => moveFavorite(index, index - 1)}
-                    disabled={index === 0}
-                    className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    onClick={() => moveFavorite(index, index + 1)}
-                    disabled={index === favoriteProducts.length - 1}
-                    className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ↓
-                  </button>
+                  <Package className="w-8 h-8 text-gray-300" />
                 </div>
               </div>
             ))}
           </div>
         )}
-
-        {/* Quick tip */}
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            💡 <strong>Tips:</strong> Produk favorit akan muncul di halaman transaksi untuk akses cepat. 
-            Urutkan sesuai prioritas dengan tombol panah. Maksimal {maxFavorites} produk.
-          </p>
-        </div>
       </div>
 
-      {/* Add Products */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          Tambah Produk Favorit
-        </h3>
+      {/* Product Search & List */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Package className="w-5 h-5 text-blue-600" />
+          Pilih Produk untuk Ditambahkan
+        </h4>
 
-        {/* Search and filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Cari produk..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Semua Kategori</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+        {/* Search */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cari produk..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
         </div>
 
-        {/* Available products */}
-        {favoriteIds.length >= maxFavorites ? (
-          <div className="text-center py-8 text-gray-500">
-            <Grid className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-            <p>Maksimal {maxFavorites} produk favorit tercapai</p>
-            <p className="text-sm">Hapus produk favorit untuk menambah yang baru</p>
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-            <p>Tidak ada produk ditemukan</p>
-            {searchTerm && (
-              <p className="text-sm">Coba ubah kata kunci pencarian</p>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
-            {filteredProducts.slice(0, 20).map(product => (
-              <div key={product.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-gray-100 rounded-lg mb-3 flex items-center justify-center mx-auto">
-                  <Package className="w-6 h-6 text-gray-400" />
-                </div>
-                
-                <h4 className="font-medium text-sm text-center mb-2 line-clamp-2">
-                  {product.name}
-                </h4>
-                
-                <div className="text-center mb-3">
-                  <p className="text-blue-600 font-semibold text-sm">
-                    {formatCurrency(product.price)}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Stok: {product.stock}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {product.category?.name}
-                  </p>
-                </div>
-                
-                <button
-                  onClick={() => addToFavorites(product)}
-                  disabled={favoriteIds.length >= maxFavorites}
-                  className="w-full bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium transition-colors flex items-center justify-center gap-1"
+        {/* Products List */}
+        <div className="max-h-96 overflow-y-auto">
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p className="font-medium">
+                {searchQuery ? 'Tidak ada produk yang sesuai' : 'Semua produk sudah menjadi favorit'}
+              </p>
+              {searchQuery && (
+                <p className="text-sm">Coba kata kunci lain</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredProducts.map(product => (
+                <div
+                  key={product.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <Star className="w-3 h-3" />
-                  Tambah
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {filteredProducts.length > 20 && (
-          <div className="text-center mt-4 text-sm text-gray-500">
-            Menampilkan 20 dari {filteredProducts.length} produk. Gunakan pencarian untuk hasil yang lebih spesifik.
-          </div>
-        )}
+                  <div className="flex-1">
+                    <h5 className="font-medium text-gray-800">{product.name}</h5>
+                    <div className="flex items-center gap-4 mt-1">
+                      <p className="text-sm text-gray-600">
+                        {product.category?.name || 'Tanpa Kategori'}
+                      </p>
+                      <p className="text-sm font-semibold text-blue-600">
+                        {formatPrice(product.price)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Stok: {product.stock}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => addToFavorites(product)}
+                    disabled={favoriteProducts.length >= MAX_FAVORITES}
+                    className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Tambah
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Usage Instructions */}
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
-          📋 Cara Penggunaan
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <h4 className="font-medium mb-2">Mengelola Favorit:</h4>
-            <ul className="space-y-1 text-gray-600">
-              <li>• Maksimal {maxFavorites} produk favorit</li>
-              <li>• Gunakan tombol ↑↓ untuk mengatur urutan</li>
-              <li>• Tombol ❌ untuk menghapus dari favorit</li>
-              <li>• Klik "Simpan Perubahan" setelah edit</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium mb-2">Di Halaman Transaksi:</h4>
-            <ul className="space-y-1 text-gray-600">
-              <li>• Produk favorit muncul di bagian atas</li>
-              <li>• Klik langsung untuk tambah ke keranjang</li>
-              <li>• Urutan sesuai pengaturan di sini</li>
-              <li>• Shortcut keyboard F1-F6 tersedia</li>
-            </ul>
-          </div>
-        </div>
+      {/* Tips */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h5 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          Tips Produk Favorit:
+        </h5>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• Pilih produk yang paling sering dijual untuk akses cepat</li>
+          <li>• Maksimal {MAX_FAVORITES} produk favorit dapat ditampilkan</li>
+          <li>• Drag & drop untuk mengubah urutan tampilan</li>
+          <li>• Produk favorit akan muncul di halaman transaksi</li>
+          <li>• Jangan lupa klik "Simpan Favorit" setelah mengubah</li>
+        </ul>
       </div>
     </div>
   );
