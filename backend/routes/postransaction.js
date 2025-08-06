@@ -23,7 +23,6 @@ router.get("/init", auth, async (req, res) => {
 
       // Get all categories
       prisma.category.findMany({
-        where: { isActive: true },
         orderBy: { name: "asc" },
       }),
 
