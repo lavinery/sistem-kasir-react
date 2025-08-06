@@ -32,7 +32,8 @@ try {
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 5000;
+require('dotenv').config();
+const PORT = process.env.PORT || 8001;
 
 // Middleware
 app.use(
