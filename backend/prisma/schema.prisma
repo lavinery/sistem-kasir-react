@@ -42,6 +42,7 @@ model Product {
   id          Int      @id @default(autoincrement())
   name        String
   description String?
+  kode_produk String   @unique
   barcode     String?  @unique
   price       Float
   stock       Int      @default(0)
