@@ -116,6 +116,7 @@ try {
   app.use("/api/settings", settingsRoutes);
   app.use("/api/favorites", favoritesRoutes);
   app.use("/api/dashboard", dashboardRoutes);
+  app.use("/api/pos", postransactionRoutes);
   console.log("✅ All API routes registered successfully");
 } catch (error) {
   console.error("❌ Error registering routes:", error.message);
