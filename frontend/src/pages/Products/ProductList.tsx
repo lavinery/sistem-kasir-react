@@ -28,6 +28,7 @@ interface Product {
   id: number;
   name: string;
   description: string;
+  kode_produk: string;
   barcode: string;
   price: number;
   stock: number;
@@ -248,6 +249,9 @@ export default function ProductList() {
               <Table>
                 <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                   <TableRow>
+                    <TableCell isHeader onClick={() => requestSort('kode_produk')} className="cursor-pointer">
+                      <div className="flex items-center gap-1">Product Code {getSortIndicator('kode_produk')}</div>
+                    </TableCell>
                     <TableCell isHeader onClick={() => requestSort('name')} className="cursor-pointer">
                       <div className="flex items-center gap-1">Product Name {getSortIndicator('name')}</div>
                     </TableCell>
@@ -268,15 +272,16 @@ export default function ProductList() {
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="py-4 text-center">Loading...</TableCell>
+                      <TableCell colSpan={7} className="py-4 text-center">Loading...</TableCell>
                     </TableRow>
                   ) : error ? (
                      <TableRow>
-                      <TableCell colSpan={6} className="py-4 text-center text-red-500">{error}</TableCell>
+                      <TableCell colSpan={7} className="py-4 text-center text-red-500">{error}</TableCell>
                     </TableRow>
                   ) : (
                     sortedProducts.map((product) => (
                       <TableRow key={product.id}>
+                        <TableCell>{product.kode_produk}</TableCell>
                         <TableCell>{product.name}</TableCell>
                         <TableCell>{product.category?.name || "N/A"}</TableCell>
                         <TableCell>

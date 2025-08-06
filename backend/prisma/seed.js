@@ -110,6 +110,7 @@ async function main() {
         data: {
           name: "Pulpen Pilot G2 0.7mm",
           description: "Pulpen gel premium dengan tinta halus",
+          kode_produk: "PRD-001",
           barcode: "PEN001",
           price: 5500,
           stock: 150,
@@ -120,6 +121,7 @@ async function main() {
         data: {
           name: "Pensil 2B Faber Castell",
           description: "Pensil kayu berkualitas tinggi",
+          kode_produk: "PRD-002",
           barcode: "PEN002",
           price: 3000,
           stock: 200,
@@ -130,6 +132,7 @@ async function main() {
         data: {
           name: "Pulpen Joyko GP-265",
           description: "Pulpen gel warna biru tinta halus",
+          kode_produk: "PRD-003",
           barcode: "PEN003",
           price: 2500,
           stock: 120,
@@ -140,6 +143,7 @@ async function main() {
         data: {
           name: "Pensil Mekanik 0.5mm",
           description: "Pensil mekanik dengan grip nyaman",
+          kode_produk: "PRD-004",
           barcode: "PEN004",
           price: 8500,
           stock: 80,
@@ -150,6 +154,7 @@ async function main() {
         data: {
           name: "Set Pulpen Warna Standler (12pcs)",
           description: "Set pulpen warna lengkap 12 warna",
+          kode_produk: "PRD-005",
           barcode: "PEN005",
           price: 45000,
           stock: 25,
@@ -160,6 +165,7 @@ async function main() {
         data: {
           name: "Pensil Warna Greebel (24pcs)",
           description: "Pensil warna premium 24 warna",
+          kode_produk: "PRD-006",
           barcode: "PEN006",
           price: 35000,
           stock: 30,
@@ -172,6 +178,7 @@ async function main() {
         data: {
           name: "Buku Tulis 38 Lembar Sinar Dunia",
           description: "Buku tulis garis standar 38 lembar",
+          kode_produk: "PRD-007",
           barcode: "BUK001",
           price: 3500,
           stock: 300,
@@ -182,6 +189,7 @@ async function main() {
         data: {
           name: "Buku Gambar A4",
           description: "Buku gambar polos ukuran A4",
+          kode_produk: "PRD-008",
           barcode: "BUK002",
           price: 8000,
           stock: 100,
@@ -192,6 +200,7 @@ async function main() {
         data: {
           name: "Kertas HVS A4 70gsm (1 Rim)",
           description: "Kertas fotocopy putih 500 lembar",
+          kode_produk: "PRD-009",
           barcode: "KRT001",
           price: 45000,
           stock: 50,
@@ -202,6 +211,7 @@ async function main() {
         data: {
           name: "Buku Tulis 58 Lembar Campus",
           description: "Buku tulis garis tebal 58 lembar",
+          kode_produk: "PRD-010",
           barcode: "BUK003",
           price: 5000,
           stock: 200,
@@ -214,6 +224,7 @@ async function main() {
         data: {
           name: "Crayon Joyko 12 Warna",
           description: "Crayon lilin berkualitas 12 warna",
+          kode_produk: "PRD-011",
           barcode: "ART001",
           price: 12000,
           stock: 75,
@@ -224,6 +235,7 @@ async function main() {
         data: {
           name: "Spidol Snowman Whiteboard",
           description: "Spidol papan tulis warna hitam",
+          kode_produk: "PRD-012",
           barcode: "ART002",
           price: 8500,
           stock: 60,
@@ -236,6 +248,7 @@ async function main() {
         data: {
           name: "Stapler Joyko HD-10",
           description: "Stapler kecil untuk 10 lembar",
+          kode_produk: "PRD-013",
           barcode: "OFF001",
           price: 15000,
           stock: 40,
@@ -246,6 +259,7 @@ async function main() {
         data: {
           name: "Isi Staples No.10",
           description: "Isi stapler ukuran standar",
+          kode_produk: "PRD-014",
           barcode: "OFF002",
           price: 2000,
           stock: 200,
@@ -256,6 +270,7 @@ async function main() {
         data: {
           name: "Paper Clip Joyko (1 Box)",
           description: "Klip kertas ukuran sedang",
+          kode_produk: "PRD-015",
           barcode: "OFF003",
           price: 8000,
           stock: 80,
@@ -268,6 +283,7 @@ async function main() {
         data: {
           name: "Penggaris Plastik 30cm",
           description: "Penggaris transparan 30 cm",
+          kode_produk: "PRD-016",
           barcode: "GEO001",
           price: 3000,
           stock: 150,
@@ -278,6 +294,7 @@ async function main() {
         data: {
           name: "Jangka Kompas Butterfly",
           description: "Jangka untuk menggambar lingkaran",
+          kode_produk: "PRD-017",
           barcode: "GEO002",
           price: 25000,
           stock: 35,
@@ -290,6 +307,7 @@ async function main() {
         data: {
           name: "Tempat Pensil Dompet Kain",
           description: "Tempat pensil model dompet",
+          kode_produk: "PRD-018",
           barcode: "BAG001",
           price: 15000,
           stock: 90,
@@ -300,10 +318,11 @@ async function main() {
         data: {
           name: "Tas Ransel Sekolah",
           description: "Tas ransel untuk pelajar",
+          kode_produk: "PRD-019",
           barcode: "BAG002",
           price: 85000,
           stock: 20,
-          categoryId: categories[5].id,
+          categoryId: [5].id,
         },
       }),
 
@@ -312,6 +331,7 @@ async function main() {
         data: {
           name: "Penghapus Faber Castell",
           description: "Penghapus putih berkualitas",
+          kode_produk: "PRD-020",
           barcode: "STA001",
           price: 2500,
           stock: 180,
@@ -322,6 +342,7 @@ async function main() {
         data: {
           name: "Tip-Ex Correction Pen",
           description: "Pen koreksi untuk menutupi kesalahan",
+          kode_produk: "PRD-021",
           barcode: "STA002",
           price: 7500,
           stock: 70,
@@ -332,6 +353,7 @@ async function main() {
         data: {
           name: "Double Tape 1 inch",
           description: "Perekat dua sisi lebar 1 inch",
+          kode_produk: "PRD-022",
           barcode: "STA003",
           price: 12000,
           stock: 60,
@@ -342,6 +364,7 @@ async function main() {
         data: {
           name: "Cutter Kenko",
           description: "Pisau cutter dengan mata pisau cadangan",
+          kode_produk: "PRD-023",
           barcode: "STA004",
           price: 8500,
           stock: 45,

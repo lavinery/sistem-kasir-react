@@ -1,43 +1,17 @@
-import asyncio
-from playwright.async_api import async_playwright, expect
+from playwright.sync_api import sync_playwright
 
-async def main():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
-
-        try:
-            # Go to the signin page
-            await page.goto("http://localhost:5173/signin", timeout=30000)
-
-            # Fill in the login form using placeholder selectors
-            await page.get_by_placeholder("admin@kasir.com").fill("admin@kasir.com")
-            await page.get_by_placeholder("Enter your password").fill("admin123")
-
-            # Click the sign in button
-            await page.get_by_role("button", name="Sign in").click()
-
-            # Wait for navigation to the dashboard and for the sidebar to be ready
-            await expect(page.get_by_role("link", name="Dashboard")).to_be_visible(timeout=15000)
-
-            # Click on the "Products" link in the sidebar
-            await page.get_by_role("link", name="Products").click()
-
-            # Wait for the products page to load
-            await expect(page.get_by_role("heading", name="Products")).to_be_visible(timeout=15000)
-
-            # Take a screenshot
-            await page.screenshot(path="jules-scratch/verification/products_page.png")
-
-            print("Screenshot of products page taken successfully.")
-
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            # Take a screenshot even if it fails to see the state
-            await page.screenshot(path="jules-scratch/verification/error.png")
-
-        finally:
-            await browser.close()
+def run_verification():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto("http://localhost:5173/auth/signin")
+        page.fill('input[name="email"]', 'admin@kasir.com')
+        page.fill('input[name="password"]', 'admin123')
+        page.click('button[type="submit"]')
+        page.wait_for_url("http://localhost:5173/")
+        page.goto("http://localhost:5173/products")
+        page.screenshot(path="jules-scratch/verification/products_page.png")
+        browser.close()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_verification()
