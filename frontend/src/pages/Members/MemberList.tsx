@@ -227,7 +227,7 @@ export default function MemberList() {
                         <TableCell>
                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(member.totalPurchase)}
                         </TableCell>
-                        <TableCell>{member.visitCount}</.TableCell>
+                        <TableCell>{member.visitCount}</TableCell>
                         <TableCell>
                            <Badge size="sm" color={member.isActive ? "success" : "error"}>
                             {member.isActive ? "Active" : "Inactive"}
