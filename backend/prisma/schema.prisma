@@ -147,7 +147,7 @@ model StockMovement {
 model Settings {
   id    Int    @id @default(autoincrement())
   key   String @unique
-  value String @db.Text
+  value String
   type  String @default("STRING") // STRING, NUMBER, BOOLEAN, JSON
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
