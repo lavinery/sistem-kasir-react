@@ -84,14 +84,14 @@ model Member {
 model Sale {
   id                  Int      @id @default(autoincrement())
   saleNumber          String   @unique // TRX-001-20240315
-  subtotal            Decimal  @db.Decimal(12, 2)
-  memberDiscount      Decimal  @default(0) @db.Decimal(12, 2)
-  transactionDiscount Decimal  @default(0) @db.Decimal(12, 2)
-  totalDiscount       Decimal  @default(0) @db.Decimal(12, 2)
-  tax                 Decimal  @default(0) @db.Decimal(12, 2)
-  total               Decimal  @db.Decimal(12, 2)
-  cashAmount          Decimal? @db.Decimal(12, 2)
-  change              Decimal? @db.Decimal(12, 2)
+  subtotal            Float
+  memberDiscount      Float    @default(0)
+  transactionDiscount Float    @default(0)
+  totalDiscount       Float    @default(0)
+  tax                 Float    @default(0)
+  total               Float
+  cashAmount          Float?
+  change              Float?
   paymentMethod       String   @default("cash") // cash, card, digital
   memberId            Int?
   userId              Int
