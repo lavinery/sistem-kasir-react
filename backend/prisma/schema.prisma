@@ -43,7 +43,7 @@ model Product {
   name        String
   description String?
   barcode     String?  @unique
-  price       Decimal  @db.Decimal(10, 2)
+  price       Float
   stock       Int      @default(0)
   minStock    Int      @default(10)
   categoryId  Int?
