@@ -61,6 +61,11 @@ const managementItems: NavItem[] = [
     path: "/users",
   },
   {
+    name: "Sales History",
+    icon: <TableIcon />,
+    path: "/sales",
+  },
+  {
     name: "Settings",
     icon: <SettingsIcon />,
     path: "/settings",

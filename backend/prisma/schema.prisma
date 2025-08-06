@@ -45,6 +45,8 @@ model Product {
   kode_produk String   @unique
   barcode     String?  @unique
   price       Float
+  harga_beli  Float    @default(0)
+  harga_jual  Float    @default(0)
   stock       Int      @default(0)
   minStock    Int      @default(10)
   categoryId  Int?

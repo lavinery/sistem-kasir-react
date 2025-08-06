@@ -14,6 +14,7 @@ import ProductList from "./pages/Products/ProductList";
 import CategoryList from "./pages/Categories/CategoryList";
 import MemberList from "./pages/Members/MemberList";
 import UserList from "./pages/Users/UserList";
+import SalesHistory from "./pages/Sales/SalesHistory";
 
 export default function App() {
   return (
@@ -39,6 +40,9 @@ export default function App() {
 
             {/* Others Page */}
             <Route path="/users" element={<UserList />} />
+
+            {/* Sales Pages */}
+            <Route path="/sales" element={<SalesHistory />} />
           </Route>
 
           {/* Auth Layout */}
