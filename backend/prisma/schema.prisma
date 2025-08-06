@@ -67,8 +67,8 @@ model Member {
   email         String?
   phone         String?
   address       String?
-  discountRate  Decimal  @default(0.05) @db.Decimal(3, 2) // 5% default
-  totalPurchase Decimal  @default(0) @db.Decimal(12, 2)
+  discountRate  Float    @default(0.05)
+  totalPurchase Float    @default(0)
   visitCount    Int      @default(0)
   lastVisit     DateTime?
   isActive      Boolean  @default(true)
