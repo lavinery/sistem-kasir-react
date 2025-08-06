@@ -18,6 +18,9 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import POSTransaction from "./pages/POS/POSTransaction";
+import SystemSettings from "./pages/Settings/SystemSettings";
+import FavoriteProducts from "./pages/Settings/FavoriteProducts";
 
 export default function App() {
   return (
@@ -28,6 +31,13 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Home />} />
+
+            {/* POS Pages */}
+            <Route path="/pos" element={<POSTransaction />} />
+
+            {/* Settings Pages */}
+            <Route path="/settings" element={<SystemSettings />} />
+            <Route path="/settings/favorites" element={<FavoriteProducts />} />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
