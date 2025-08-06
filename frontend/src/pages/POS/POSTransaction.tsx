@@ -46,12 +46,20 @@ const POSTransaction: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [memberQuery, setMemberQuery] = useState('');
+  const [sort, setSort] = useState<{ by: 'name' | 'price', order: 'asc' | 'desc' }>({ by: 'name', order: 'asc' });
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
 
   useEffect(() => {
     loadPosData();
   }, []);
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   const loadPosData = async () => {
     try {
@@ -103,7 +111,7 @@ const POSTransaction: React.FC = () => {
             : item
         ));
       } else {
-        alert('Stock tidak mencukupi!');
+        showNotification('error', 'Stock tidak mencukupi!');
       }
     } else {
       if (product.stock > 0) {
@@ -115,7 +123,7 @@ const POSTransaction: React.FC = () => {
           stock: product.stock
         }]);
       } else {
-        alert('Produk habis!');
+        showNotification('error', 'Produk habis!');
       }
     }
   };
@@ -134,7 +142,7 @@ const POSTransaction: React.FC = () => {
           : item
       ));
     } else {
-      alert('Stock tidak mencukupi!');
+      showNotification('error', 'Stock tidak mencukupi!');
     }
   };
 
@@ -175,9 +183,17 @@ const POSTransaction: React.FC = () => {
     return `${symbol} ${amount.toLocaleString('id-ID')}`;
   };
 
+  const sortedProducts = [...products].sort((a, b) => {
+    if (sort.by === 'name') {
+      return sort.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    } else {
+      return sort.order === 'asc' ? a.price - b.price : b.price - a.price;
+    }
+  });
+
   const checkout = async () => {
     if (cart.length === 0) {
-      alert('Keranjang kosong!');
+      showNotification('error', 'Keranjang kosong!');
       return;
     }
 
@@ -207,13 +223,13 @@ const POSTransaction: React.FC = () => {
       const result = await ApiService.checkout(transactionData);
       
       if (result.success) {
-        alert('Transaksi berhasil!');
+        showNotification('success', 'Transaksi berhasil!');
         clearCart();
         loadPosData(); // Refresh data
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Transaksi gagal: ' + (error as Error).message);
+      showNotification('error', 'Transaksi gagal: ' + (error as Error).message);
     } finally {
       setProcessing(false);
     }
@@ -231,6 +247,11 @@ const POSTransaction: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-screen max-h-screen overflow-hidden">
       {/* Products Section */}
       <div className="lg:col-span-2 bg-white rounded-lg shadow p-6 overflow-hidden flex flex-col">
+        {notification && (
+          <div className={`p-4 mb-4 rounded-md text-white ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+            {notification.message}
+          </div>
+        )}
         <div className="flex-shrink-0">
           <h2 className="text-xl font-semibold mb-4">Produk</h2>
           
@@ -275,10 +296,18 @@ const POSTransaction: React.FC = () => {
           )}
         </div>
 
-        {/* Products Grid */}
+        {/* Sort and Products Grid */}
+        <div className="flex justify-end gap-2 mb-2">
+            <button onClick={() => setSort({ by: 'name', order: sort.order === 'asc' ? 'desc' : 'asc' })} className="text-sm px-3 py-1 border rounded-md">
+                Sort by Name {sort.by === 'name' && (sort.order === 'asc' ? '↑' : '↓')}
+            </button>
+            <button onClick={() => setSort({ by: 'price', order: sort.order === 'asc' ? 'desc' : 'asc' })} className="text-sm px-3 py-1 border rounded-md">
+                Sort by Price {sort.by === 'price' && (sort.order === 'asc' ? '↑' : '↓')}
+            </button>
+        </div>
         <div className="flex-1 overflow-auto">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {products.map((product) => (
+            {sortedProducts.map((product) => (
               <button
                 key={product.id}
                 onClick={() => addToCart(product)}
