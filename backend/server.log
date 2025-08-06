@@ -1,0 +1,67 @@
+
+> sistem-kasir-backend@1.0.0 start
+> node server.js
+
+[dotenv@17.2.1] injecting env (9) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+✅ All routes loaded successfully
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+✅ All API routes registered successfully
+
+🚀 POS Backend Server Started Successfully!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 Server URL: http://localhost:8001
+🏥 Health Check: http://localhost:8001/health
+🧪 Database Test: http://localhost:8001/api/test
+📅 Started at: 2025-08-06T02:57:11.010Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Available API Endpoints:
+• POST /api/auth/login - User authentication
+• GET  /api/categories - Get all categories  
+• GET  /api/products - Get all products
+• GET  /api/sales - Get sales transactions
+• GET  /api/members - Get all members
+• GET  /api/users - Get all users (admin only)
+• GET  /api/settings - Get system settings
+• GET  /api/favorites - Get favorite products
+• PUT  /api/favorites - Update favorite products
+
+Ready to serve POS requests! 🛒✨
+
+2025-08-06T02:57:21.328Z - GET /health
+2025-08-06T02:57:25.753Z - GET /api/test
+2025-08-06T03:01:30.377Z - POST /api/auth/login
+Login request body: { email: 'admin@kasir.com', password: 'admin123' }
+Login request headers: {
+  host: 'localhost:8001',
+  'user-agent': 'curl/7.88.1',
+  accept: '*/*',
+  'content-type': 'application/json',
+  'content-length': '49'
+}
+2025-08-06T03:01:36.418Z - GET /api/pos/init
+2025-08-06T03:03:34.567Z - GET /health
+2025-08-06T03:03:34.570Z - GET /api/test
+2025-08-06T03:03:34.576Z - POST /api/auth/login
+Login request body: { email: 'admin@kasir.com', password: 'admin123' }
+Login request headers: {
+  host: 'localhost:8001',
+  'user-agent': 'python-requests/2.32.4',
+  'accept-encoding': 'gzip, deflate',
+  accept: '*/*',
+  connection: 'keep-alive',
+  'content-type': 'application/json',
+  'content-length': '52'
+}
+2025-08-06T03:03:34.676Z - GET /api/pos/init
+2025-08-06T03:03:34.686Z - GET /api/categories
+2025-08-06T03:03:34.691Z - GET /api/products
+2025-08-06T03:03:34.698Z - GET /api/members
+2025-08-06T03:03:34.704Z - GET /api/sales
+2025-08-06T03:03:34.711Z - GET /api/settings
+2025-08-06T03:03:34.717Z - GET /api/favorites
+2025-08-06T03:03:34.724Z - GET /api/dashboard
+2025-08-06T03:03:34.728Z - GET /api/users
+2025-08-06T03:03:53.059Z - GET /
+2025-08-06T03:07:52.478Z - GET /api/pos/init
+2025-08-06T03:07:52.480Z - GET /api/pos/init

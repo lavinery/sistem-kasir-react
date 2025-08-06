@@ -1,0 +1,4 @@
+2025-08-06 02:54:45,810 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2025-08-06 02:54:45,813 INFO supervisord started with pid 1850
+2025-08-06 02:54:46,816 INFO spawned: 'backend' with pid 1851
+2025-08-06 02:54:48,249 INFO success: backend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
