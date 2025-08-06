@@ -1,53 +1,90 @@
-import asyncio
-from playwright.async_api import async_playwright, expect
+import re
+import time
+from playwright.sync_api import Page, expect, sync_playwright
 
-async def main():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
+def run(playwright):
+    browser = playwright.chromium.launch(headless=True)
+    context = browser.new_context()
+    page = context.new_page()
 
-        try:
-            # 1. Login
-            await page.goto("http://localhost:5173/signin", timeout=30000)
-            await page.fill('input[type="email"]', 'admin@kasir.com')
-            await page.fill('input[type="password"]', 'admin123')
-            await page.click('button[type="submit"]')
+    # Increase timeout for all actions
+    page.set_default_timeout(15000)
 
-            # Wait for dashboard to load
-            await expect(page.get_by_role("link", name="Dashboard")).to_be_visible(timeout=15000)
-            await page.screenshot(path="jules-scratch/verification/01_dashboard.png")
-            print("Login successful, dashboard loaded.")
+    try:
+        # 1. Login
+        page.goto("http://localhost:5173/auth/signin")
 
-            # 2. Product Page
-            await page.click('a[href="/products"]')
-            await expect(page.get_by_role("heading", name="Products")).to_be_visible(timeout=15000)
-            await page.screenshot(path="jules-scratch/verification/02_products.png")
-            print("Product page loaded.")
+        # Explicitly wait for the body to be ready
+        page.wait_for_selector("body")
 
-            # 3. Category Page
-            await page.click('a[href="/categories"]')
-            await expect(page.get_by_role("heading", name="Categories")).to_be_visible(timeout=15000)
-            await page.screenshot(path="jules-scratch/verification/03_categories.png")
-            print("Category page loaded.")
+        # Wait for the specific element with a longer timeout
+        email_input = page.get_by_placeholder("admin@kasir.com")
+        expect(email_input).to_be_visible(timeout=15000)
 
-            # 4. Member Page
-            await page.click('a[href="/members"]')
-            await expect(page.get_by_role("heading", name="Members")).to_be_visible(timeout=15000)
-            await page.screenshot(path="jules-scratch/verification/04_members.png")
-            print("Member page loaded.")
+        email_input.fill("admin@kasir.com")
+        page.get_by_placeholder("Enter your password").fill("admin123")
+        page.get_by_role("button", name="Sign in", exact=True).click()
+        expect(page).to_have_url("http://localhost:5173/")
 
-            # 5. POS Page
-            await page.click('a[href="/pos"]')
-            await expect(page.get_by_role("heading", name="Produk")).to_be_visible(timeout=15000)
-            await page.screenshot(path="jules-scratch/verification/05_pos.png")
-            print("POS page loaded.")
+        # 2. Navigate to Product Management
+        page.get_by_role("link", name="Products", exact=True).click()
+        expect(page).to_have_url("http://localhost:5173/products")
+        expect(page.get_by_role("heading", name="Products")).to_be_visible()
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            await page.screenshot(path="jules-scratch/verification/error.png")
+        # Wait for table to load
+        expect(page.locator("table >> text=Loading...")).not_to_be_visible()
 
-        finally:
-            await browser.close()
+        # 3. Add a new product
+        page.get_by_role("button", name="Add Product").click()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+        modal = page.locator(".modal")
+        expect(modal.get_by_role("heading", name="Add Product")).to_be_visible()
+
+        modal.get_by_label("Name").fill("Test Product - Playwright")
+        modal.get_by_label("Barcode").fill("PW-TEST-001")
+        modal.get_by_label("Price").fill("15000")
+        modal.get_by_label("Stock").fill("100")
+        modal.get_by_label("Category").select_option(label="Stationery Lainnya")
+        modal.get_by_label("Description").fill("This is a test product created by a Playwright script.")
+        modal.get_by_role("button", name="Save").click()
+
+        # 4. Verify the product was added
+        expect(page.get_by_text("Product created successfully")).to_be_visible()
+        expect(page.get_by_role("cell", name="Test Product - Playwright")).to_be_visible()
+
+        # 5. Edit the product
+        page.get_by_role("row", name=re.compile("Test Product - Playwright")).get_by_role("button", name="Edit").click()
+
+        expect(modal.get_by_role("heading", name="Edit Product")).to_be_visible()
+        modal.get_by_label("Name").fill("Test Product - Edited")
+        modal.get_by_label("Price").fill("17500")
+        modal.get_by_role("button", name="Save").click()
+
+        # 6. Verify the product was edited
+        expect(page.get_by_text("Product updated successfully")).to_be_visible()
+        expect(page.get_by_role("cell", name="Test Product - Edited")).to_be_visible()
+
+        # 7. Sort the product list
+        product_header = page.get_by_role("cell", name=re.compile("Product Name"))
+        product_header.click() # Sort ascending
+        time.sleep(0.5)
+        product_header.click() # Sort descending
+        time.sleep(0.5)
+
+        # 8. Delete the product
+        page.on("dialog", lambda dialog: dialog.accept())
+        page.get_by_role("row", name=re.compile("Test Product - Edited")).get_by_role("button", name="Delete").click()
+
+        # 9. Verify the product was deleted
+        expect(page.get_by_text("Product deleted successfully")).to_be_visible()
+        expect(page.get_by_role("cell", name="Test Product - Edited")).not_to_be_visible()
+
+        # 10. Screenshot
+        page.screenshot(path="jules-scratch/verification/verification.png")
+
+    finally:
+        context.close()
+        browser.close()
+
+with sync_playwright() as p:
+    run(p)

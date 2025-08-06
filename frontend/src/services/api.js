@@ -93,14 +93,74 @@ class ApiService {
     return await this.request(`/api/products/${id}`);
   }
 
+  async createProduct(productData) {
+    return await this.request('/api/products', {
+      method: 'POST',
+      body: JSON.stringify(productData),
+    });
+  }
+
+  async updateProduct(id, productData) {
+    return await this.request(`/api/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(productData),
+    });
+  }
+
+  async deleteProduct(id) {
+    return await this.request(`/api/products/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Categories APIs
   async getCategories() {
     return await this.request('/api/categories');
   }
 
+  async createCategory(categoryData) {
+    return await this.request('/api/categories', {
+      method: 'POST',
+      body: JSON.stringify(categoryData),
+    });
+  }
+
+  async updateCategory(id, categoryData) {
+    return await this.request(`/api/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData),
+    });
+  }
+
+  async deleteCategory(id) {
+    return await this.request(`/api/categories/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Members APIs
   async getMembers() {
     return await this.request('/api/members');
+  }
+
+  async createMember(memberData) {
+    return await this.request('/api/members', {
+      method: 'POST',
+      body: JSON.stringify(memberData),
+    });
+  }
+
+  async updateMember(id, memberData) {
+    return await this.request(`/api/members/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(memberData),
+    });
+  }
+
+  async deleteMember(id) {
+    return await this.request(`/api/members/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Settings APIs
