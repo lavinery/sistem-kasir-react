@@ -26,6 +26,7 @@ try {
   settingsRoutes = require("./routes/settings");
   favoritesRoutes = require("./routes/favorites");
   dashboardRoutes = require("./routes/dashboard");
+  postransactionRoutes = require("./routes/postransaction");
   console.log("✅ All routes loaded successfully");
 } catch (error) {
   console.error("❌ Error loading routes:", error.message);
