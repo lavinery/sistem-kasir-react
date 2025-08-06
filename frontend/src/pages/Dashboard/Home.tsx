@@ -1,41 +1,50 @@
-import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
-import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
-import StatisticsChart from "../../components/ecommerce/StatisticsChart";
-import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
-import RecentOrders from "../../components/ecommerce/RecentOrders";
-import DemographicCard from "../../components/ecommerce/DemographicCard";
+import { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
+import DashboardCards from "../../components/ecommerce/DashboardCards";
+import apiService from "../../services/api";
+
+interface DashboardData {
+  totalProducts: number;
+  totalCategories: number;
+  totalSuppliers: number;
+}
 
 export default function Home() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const data = await apiService.getDashboardData();
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   return (
     <>
       <PageMeta
-        title="React.js Ecommerce Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Ecommerce Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Dashboard | TailAdmin - React.js Admin Dashboard Template"
+        description="This is the dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
       />
-      <div className="grid grid-cols-12 gap-4 md:gap-6">
-        <div className="col-span-12 space-y-6 xl:col-span-7">
-          <EcommerceMetrics />
-
-          <MonthlySalesChart />
-        </div>
-
-        <div className="col-span-12 xl:col-span-5">
-          <MonthlyTarget />
-        </div>
-
-        <div className="col-span-12">
-          <StatisticsChart />
-        </div>
-
-        <div className="col-span-12 xl:col-span-5">
-          <DemographicCard />
-        </div>
-
-        <div className="col-span-12 xl:col-span-7">
-          <RecentOrders />
-        </div>
-      </div>
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        dashboardData && (
+          <DashboardCards
+            totalProducts={dashboardData.totalProducts}
+            totalCategories={dashboardData.totalCategories}
+            totalSuppliers={dashboardData.totalSuppliers}
+          />
+        )
+      )}
     </>
   );
 }

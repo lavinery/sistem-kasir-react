@@ -156,7 +156,17 @@ export default function ProductList() {
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const { items: sortedProducts, requestSort, sortConfig } = useSortableData(products);
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const filteredProducts = sortedProducts.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.kode_produk.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const getSortIndicator = (key: keyof Product) => {
     if (!sortConfig || sortConfig.key !== key) {
@@ -239,7 +249,14 @@ export default function ProductList() {
       <ToastContainer position="bottom-right" autoClose={3000} />
 
       <div className="space-y-6">
-        <div className="flex justify-end">
+        <div className="flex justify-between">
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="p-2 border rounded"
+          />
           <Button onClick={handleAdd}>Add Product</Button>
         </div>
 
@@ -279,7 +296,7 @@ export default function ProductList() {
                       <TableCell colSpan={7} className="py-4 text-center text-red-500">{error}</TableCell>
                     </TableRow>
                   ) : (
-                    sortedProducts.map((product) => (
+                    filteredProducts.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell>{product.kode_produk}</TableCell>
                         <TableCell>{product.name}</TableCell>

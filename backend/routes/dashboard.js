@@ -107,12 +107,23 @@ router.get("/activity", auth, async (req, res) => {
 });
 
 // Basic dashboard endpoint (backward compatibility)
-router.get("/", auth, (req, res) => {
-  res.json({
-    message: "Dashboard endpoint working",
-    user: req.user.name,
-    timestamp: new Date().toISOString(),
-  });
+router.get("/", auth, async (req, res) => {
+  try {
+    const [totalProducts, totalCategories, totalSuppliers] = await Promise.all([
+      prisma.product.count({ where: { isActive: true } }),
+      prisma.category.count(),
+      prisma.stockMovement.count({ where: { type: 'IN' } }),
+    ]);
+
+    res.json({
+      totalProducts,
+      totalCategories,
+      totalSuppliers,
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard data" });
+  }
 });
 
 module.exports = router;
