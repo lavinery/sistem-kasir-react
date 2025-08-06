@@ -15,22 +15,31 @@ import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
-import AppLayout from "./layout/AppLayout";
+import { AuthProvider } from "./auth/AuthContext";
+import ProtectedRoute from "./auth/ProtectedRoute";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import POSTransaction from "./pages/POS/POSTransaction";
 import SystemSettings from "./pages/Settings/SystemSettings";
 import FavoriteProducts from "./pages/Settings/FavoriteProducts";
+import ProductList from "./pages/Products/ProductList";
+import CategoryList from "./pages/Categories/CategoryList";
+import MemberList from "./pages/Members/MemberList";
 
 export default function App() {
   return (
-    <>
+    <AuthProvider>
       <Router>
         <ScrollToTop />
         <Routes>
-          {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
             <Route index path="/" element={<Home />} />
+
+            {/* Management Pages */}
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/categories" element={<CategoryList />} />
+            <Route path="/members" element={<MemberList />} />
 
             {/* POS Pages */}
             <Route path="/pos" element={<POSTransaction />} />
@@ -71,6 +80,6 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-    </>
+    </AuthProvider>
   );
 }

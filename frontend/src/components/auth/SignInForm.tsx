@@ -1,20 +1,21 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import ApiService from "../../services/api";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@kasir.com");
+  const [password, setPassword] = useState("admin123");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,12 +28,12 @@ export default function SignInForm() {
 
     setLoading(true);
     try {
-      const response = await ApiService.login(email, password);
-      console.log("Login success:", response);
+      await login(email, password);
       navigate("/"); // Redirect to dashboard
-    } catch (error) {
-      console.error("Login error:", error);
-      setError((error as Error).message || "Login gagal");
+    } catch (err) {
+      const errorMessage = (err as Error).message || "Login gagal. Periksa kembali email dan password Anda.";
+      setError(errorMessage);
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }

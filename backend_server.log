@@ -1,0 +1,34 @@
+
+> sistem-kasir-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+✅ All routes loaded successfully
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+✅ All API routes registered successfully
+
+🚀 POS Backend Server Started Successfully!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 Server URL: http://localhost:8001
+🏥 Health Check: http://localhost:8001/health
+🧪 Database Test: http://localhost:8001/api/test
+📅 Started at: 2025-08-06T04:29:16.378Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Available API Endpoints:
+• POST /api/auth/login - User authentication
+• GET  /api/categories - Get all categories
+• GET  /api/products - Get all products
+• GET  /api/sales - Get sales transactions
+• GET  /api/members - Get all members
+• GET  /api/users - Get all users (admin only)
+• GET  /api/settings - Get system settings
+• GET  /api/favorites - Get favorite products
+• PUT  /api/favorites - Update favorite products
+
+Ready to serve POS requests! 🛒✨
