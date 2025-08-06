@@ -1,4 +1,5 @@
 // backend/server.js - Main server file
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
@@ -12,7 +13,8 @@ let authRoutes,
   usersRoutes,
   settingsRoutes,
   favoritesRoutes,
-  dashboardRoutes;
+  dashboardRoutes,
+  postransactionRoutes;
 
 try {
   authRoutes = require("./routes/auth");
