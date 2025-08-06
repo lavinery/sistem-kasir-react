@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ApiService from '../../services/api';
 
 interface Product {
@@ -39,7 +39,8 @@ interface Settings {
 }
 
 const POSTransaction: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -64,7 +65,8 @@ const POSTransaction: React.FC = () => {
   const loadPosData = async () => {
     try {
       const data = await ApiService.getPosInitData();
-      setProducts(data.products || []);
+      setAllProducts(data.products || []);
+      setDisplayedProducts(data.products || []);
       setFavorites(data.favorites || []);
       setSettings(data.settings || null);
     } catch (error) {
@@ -74,14 +76,17 @@ const POSTransaction: React.FC = () => {
     }
   };
 
-  const searchProducts = async () => {
-    if (!searchQuery.trim()) return;
-    
-    try {
-      const results = await ApiService.searchProducts(searchQuery);
-      setProducts(results);
-    } catch (error) {
-      console.error('Error searching products:', error);
+  const handleSearchChange = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      setDisplayedProducts(allProducts);
+    } else {
+      try {
+        const results = await ApiService.searchProducts(query);
+        setDisplayedProducts(results);
+      } catch (error) {
+        console.error('Error searching products:', error);
+      }
     }
   };
 
@@ -183,13 +188,15 @@ const POSTransaction: React.FC = () => {
     return `${symbol} ${amount.toLocaleString('id-ID')}`;
   };
 
-  const sortedProducts = [...products].sort((a, b) => {
-    if (sort.by === 'name') {
-      return sort.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-    } else {
-      return sort.order === 'asc' ? a.price - b.price : b.price - a.price;
-    }
-  });
+  const sortedProducts = useMemo(() => {
+    return [...displayedProducts].sort((a, b) => {
+      if (sort.by === 'name') {
+        return sort.order === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      } else {
+        return sort.order === 'asc' ? a.price - b.price : b.price - a.price;
+      }
+    });
+  }, [displayedProducts, sort]);
 
   const checkout = async () => {
     if (cart.length === 0) {
@@ -260,17 +267,10 @@ const POSTransaction: React.FC = () => {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && searchProducts()}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Cari produk atau scan barcode..."
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <button
-              onClick={searchProducts}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-            >
-              Cari
-            </button>
           </div>
 
           {/* Favorites */}
